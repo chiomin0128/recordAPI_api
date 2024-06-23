@@ -1,0 +1,7 @@
+INSTALLED_APPS - 장고에 설치된 앱
+MIDDLEWARE - 사용자 요청/응답 사이에서 작동하는 시스템
+TEMPLATES - html파일을 자동으로 인식 
+DATABASES - 데이터베이스 연동 설정 
+AUTH_PASSWORD_VALIDATORS - 패스워드 보안 수준 검증
+LANGUAGE_CODE - 화면 언어설정
+TIME_ZONE - 시간설정
