@@ -1,5 +1,7 @@
 import jwt
 from rest_framework.views import APIView
+
+from API.service import AuthService
 from .serializers import *
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -55,16 +57,13 @@ class AuthAPIView(APIView):
         try:
             # 헤더에서 access token을 가져옴
             access_token = request.headers.get('Authorization')
-            if access_token is None:
+            if not access_token:
                 return Response({'error': 'Access token is missing'}, status=status.HTTP_401_UNAUTHORIZED)
             access_token = access_token.split(" ")[1]
 
             # 토큰 디코딩해서 유저 정보 추출
-            payload = jwt.decode(access_token, SECRET_KEY, algorithms=['HS256'])
-            pk = payload.get('email')
-            user = get_object_or_404(User, pk=pk)
+            user = AuthService.get_user_from_token(access_token)
             serializer = UserSerializer(instance=user)
-            print("hello")
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except jwt.ExpiredSignatureError:

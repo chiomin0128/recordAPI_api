@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
     # 앱 등록
     'API',
+    'chatAPI',
 
     # 설치한 라이브러리
     'rest_framework',
@@ -169,7 +170,7 @@ CORS_ALLOW_HEADERS = [
 
 # 추가적인 JWT 설정, 다 쓸 필요는 없지만 혹시 몰라서 다 넣었다.
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
