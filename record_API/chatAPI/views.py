@@ -48,10 +48,10 @@ class UserSettingView(APIView):
         try:
             user = AuthService.get_user_from_token(access_token)
             data = request.data.copy()
+            
             serializer = UserSettingSerializer(data=data)
             if serializer.is_valid():
                 settings = serializer.validated_data
-            
                 user_setting = ChatService.manage_user_setting(user.user_id, settings)
                 response_serializer = UserSettingSerializer(user_setting)
                 return Response(response_serializer.data, status=status.HTTP_201_CREATED)

@@ -47,7 +47,7 @@ class ChatService:
                 raise ValueError('User setting does not exist')
         else:
             #저장
-            user_setting, created = UserSetting.objects.get_or_create(user_id=user_id)
+            user_setting = UserSetting.objects.create(user_id=user_id)
             for key, value in settings.items():
                 setattr(user_setting, key, value)
             user_setting.save()
