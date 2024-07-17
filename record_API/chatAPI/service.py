@@ -41,10 +41,7 @@ class ChatService:
     def manage_user_setting(user_id, settings=None):
         if settings is None:
             # 조회
-            try:
-                return UserSetting.objects.get(user_id=user_id)
-            except UserSetting.DoesNotExist:
-                raise ValueError('User setting does not exist')
+            return UserSetting.objects.filter(user_id=user_id)
         else:
             #저장
             user_setting = UserSetting.objects.create(user_id=user_id)
@@ -97,21 +94,31 @@ class ChatService:
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system",
-                        f"""역할:   {user_setting.role}\n 
-                        대화 스타일: {user_setting.tone}\n   
-                        목표:       {user_setting.goal}\n
-                        응답 길이:   {user_setting.length}\n
-                        주제:       {user_setting.topics}\n\n
-                        MBTI:      {user_setting.mbti}\n
-                        성격:       {user_setting.pers}
-                        위 정보는 당신의 정보입니다.
-                        """
-                        + "대화기록 참조 : {context}"
+                    f"""
+                    역할: {user_setting.role}\n 
+                    대화 스타일: {user_setting.tone}\n   
+                    목표: {user_setting.goal}\n
+                    응답 길이: {user_setting.length}\n
+                    주제: {user_setting.topics}\n
+                    MBTI: {user_setting.mbti}\n
+                    성격: {user_setting.pers}\n
+                    유머 감각: {user_setting.humor}\n
+                    적극성: {user_setting.engagement_level}\n
+                    동의어 사용 빈도: {user_setting.synonym_usage}\n
+                    감정 인식: {'사용' if user_setting.emotion_detection else '사용 안함'}\n
+                    학습/피드백: {'사용' if user_setting.learning_feedback else '사용 안함'}\n
+                    알림 빈도: {user_setting.notification_frequency}\n
+                    언어 및 방언: {user_setting.language_dialect}\n
+                    사용자 기분 변화 대응: {user_setting.mood_adaptability}\n
+                    위 정보는 당신의 정보입니다.
+                    대화기록 참조: {{context}}
+                    """
                 ),
-                ("user", "{message}")                
+                ("user", "{message}")
             ]
         )
         return prompt
+
     
     @staticmethod
     def generate_response(user_id, user_message):

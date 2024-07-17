@@ -59,7 +59,7 @@ class AuthAPIView(APIView):
             access_token = request.headers.get('Authorization')
             if not access_token:
                 return Response({'error': 'Access token is missing'}, status=status.HTTP_401_UNAUTHORIZED)
-            access_token = access_token.split(" ")[1]
+
 
             # 토큰 디코딩해서 유저 정보 추출
             user = AuthService.get_user_from_token(access_token)

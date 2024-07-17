@@ -8,6 +8,7 @@ from record_API.settings import SECRET_KEY
 class AuthService:
     @staticmethod
     def get_user_from_token(token):
+        token = token.split(" ")[1]
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             user_id = payload.get('email')

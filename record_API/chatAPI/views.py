@@ -24,19 +24,22 @@ class UserSettingView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, format=None):
-        user_id = request.data.get('user_id')
-
+        access_token = request.headers.get('Authorization')
         # user_id가 없으면 400 Bad Request 응답 반환
-        if user_id is None:
+        if not access_token:
             return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        user = AuthService.get_user_from_token(access_token)
         try:
             # ChatService를 통해 user_setting을 조회
-            user_setting = ChatService.manage_user_setting(user_id)
+            user_setting = ChatService.manage_user_setting(user.user_id)
+            if not user_setting.exists():
+                # user_id가 존재하지 않으면 404 Not Found 응답 반환
+                raise ValueError('User setting does not exist')
         except ValueError as e:
             # user_id가 존재하지 않으면 404 Not Found 응답 반환
             return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = UserSettingSerializer(user_setting)
+        serializer = UserSettingSerializer(user_setting, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
@@ -44,7 +47,6 @@ class UserSettingView(APIView):
         if not access_token:
             return Response({'error': 'Access token is missing'}, status=status.HTTP_401_UNAUTHORIZED)
         
-        access_token = access_token.split(" ")[1]
         try:
             user = AuthService.get_user_from_token(access_token)
             data = request.data.copy()
