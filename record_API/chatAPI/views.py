@@ -1,16 +1,18 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
-from django.http import HttpResponse 
+from django.http import HttpResponse, JsonResponse 
 from rest_framework import status
 from adrf.views import APIView
 from rest_framework.response import Response  # 반드시 rest_framework.response.Response를 사용해야 합니다.
 from rest_framework.permissions import IsAuthenticated
 
-from chatAPI.serializers import UserSettingSerializer
+from chatAPI.serializers import ChatRoomSerializer, UserSettingSerializer
 from chatAPI.service import ChatService
 from API.service import AuthService
 from rest_framework.exceptions import AuthenticationFailed
+
+from chatAPI.models import ChatRoom, UserSetting
 
 # Create your views here.
 
@@ -24,11 +26,10 @@ class UserSettingView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, format=None):
-        access_token = request.headers.get('Authorization')
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
         # user_id가 없으면 400 Bad Request 응답 반환
-        if not access_token:
+        if not user:
             return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-        user = AuthService.get_user_from_token(access_token)
         try:
             # ChatService를 통해 user_setting을 조회
             user_setting = ChatService.manage_user_setting(user.user_id)
@@ -43,12 +44,11 @@ class UserSettingView(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        access_token = request.headers.get('Authorization')
-        if not access_token:
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
+        if not user:
             return Response({'error': 'Access token is missing'}, status=status.HTTP_401_UNAUTHORIZED)
         
         try:
-            user = AuthService.get_user_from_token(access_token)
             data = request.data.copy()
             
             serializer = UserSettingSerializer(data=data)
@@ -84,4 +84,53 @@ class ChatMessage(APIView):
     def get(self, request, format=None):
         user_id = request.data.get('user_id')
         return Response(ChatService.chathistory(user_id))
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ChatRoomList(APIView):
+    def post(self, request, format=None):
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
+        print(request.data.get('settings_id'))
+        try:
+            user_setting = UserSetting.objects.get(id = request.data.get('settings_id'))
+        except UserSetting.DoesNotExist:
+            return Response({'error': 'UserSetting not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        chat_room = ChatRoom.objects.create(user_id=user.user_id, user_setting_id=user_setting.id, room_name=user_setting.role)
+        
+        return Response({"success" : "승인"}, status=status.HTTP_201_CREATED)
+    
+    def get(self, request, format=None):
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
+        
+        try:
+            result = ChatRoom.objects.filter(user_id=user.user_id)
+        except ChatRoom.DoesNotExist:
+            return Response({'error': 'ChatRoom not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ChatRoomSerializer(result, many=True)  # many=True 옵션 추가
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Response 클래스를 사용하고 상태 코드를 200으로 수정
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChatRoom(APIView):
+    def post(self, request, format=None):
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
+        print(request.data.get('settings_id'))
+        try:
+            user_setting = UserSetting.objects.get(id = request.data.get('settings_id'))
+        except UserSetting.DoesNotExist:
+            return Response({'error': 'UserSetting not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        chat_room = ChatRoom.objects.create(user_id=user.user_id, user_setting_id=user_setting.id, room_name=user_setting.role)
+        
+        return Response({"success" : "승인"}, status=status.HTTP_201_CREATED)
+    
+    def get(self, request, format=None):
+        user = AuthService.get_user_from_token(request.headers.get('Authorization')) 
+        
+        try:
+            result = ChatRoom.objects.filter(user_id=user.user_id)
+        except ChatRoom.DoesNotExist:
+            return Response({'error': 'ChatRoom not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ChatRoomSerializer(result, many=True)  # many=True 옵션 추가
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Response 클래스를 사용하고 상태 코드를 200으로 수정

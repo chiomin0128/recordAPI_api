@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserSetting, ChatHistory
+from .models import ChatRoom, UserSetting, ChatHistory
 
 class UserSettingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,4 +11,11 @@ class UserSettingSerializer(serializers.ModelSerializer):
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
+        fields = '__all__'
+
+class ChatRoomSerializer(serializers.ModelSerializer):
+    user_setting = UserSettingSerializer()
+    
+    class Meta:
+        model = ChatRoom
         fields = '__all__'
